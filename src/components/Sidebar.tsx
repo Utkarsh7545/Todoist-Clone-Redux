@@ -3,13 +3,18 @@ import { TodoistApi } from "@doist/todoist-api-typescript";
 import { Layout, Typography, List, Button, Alert, Modal, Input, Menu, Dropdown, message } from "antd"; 
 import { PlusOutlined, MoreOutlined } from "@ant-design/icons"; 
 import Todoist from "./Todoist"; 
+import { useDispatch, useSelector } from 'react-redux';
+import { addProject, removeProject, updateProject } from '../redux/actions/projectActions';
+import { RootState } from '../redux/reducers';
 
 const { Sider } = Layout; 
 const { Text } = Typography;
 
 const Sidebar: React.FC = () => { 
-  const [projects, setProjects] = useState<{ id: string; name: string; isFavorite: boolean }[]>([]); 
-  const [favorites, setFavorites] = useState<{ id: string; name: string; isFavorite: boolean }[]>([]); 
+  const dispatch = useDispatch();
+  const projects = useSelector((state: RootState) => state.project.projects);
+  const favorites = projects.filter(project => project.isFavorite);
+  
   const [error, setError] = useState<string | null>(null); 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); 
   const [newProjectName, setNewProjectName] = useState(""); 
@@ -24,8 +29,9 @@ const Sidebar: React.FC = () => {
   const fetchProjects = async () => { 
     try { 
       const allProjects = await api.getProjects(); 
-      setProjects(allProjects); 
-      setFavorites(allProjects.filter((project) => project.isFavorite)); 
+      allProjects.forEach(project => {
+        dispatch(addProject(project));
+      });
     } catch { 
       setError("Failed to load projects. Please try again later."); 
     } 
@@ -38,11 +44,7 @@ const Sidebar: React.FC = () => {
     } 
     try { 
       const newProject = await api.addProject({ name: newProjectName }); 
-      setProjects([...projects, newProject]); 
-      console.log()
-      if (newProject.isFavorite) { 
-        setFavorites([...favorites, newProject]); 
-      } 
+      dispatch(addProject(newProject));
       setIsAddModalOpen(false); 
       setNewProjectName(""); 
       message.success("Project added successfully."); 
@@ -53,9 +55,8 @@ const Sidebar: React.FC = () => {
 
   const handleDeleteProject = async (id: string) => { 
     try { 
-      setProjects(projects.filter((project) => project.id !== id)); 
-      setFavorites(favorites.filter((project) => project.id !== id)); 
       await api.deleteProject(id); 
+      dispatch(removeProject(id)); 
       message.success("Project deleted successfully."); 
     } catch { 
       setError("Failed to delete project. Please try again later."); 
@@ -69,9 +70,7 @@ const Sidebar: React.FC = () => {
     } 
     try { 
       const updatedProject = await api.updateProject(editProjectId!, { name: editProjectName }); 
-      //console.log(updatedProject);
-      setProjects((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))); 
-      setFavorites((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))); 
+      dispatch(updateProject(updatedProject)); 
       setIsEditModalOpen(false); 
       setEditProjectId(null); 
       setEditProjectName(""); 
@@ -81,7 +80,7 @@ const Sidebar: React.FC = () => {
     } 
   };
 
-const toggleFavorite = async (projectId: string, isFavorite: boolean) => { 
+  const toggleFavorite = async (projectId: string, isFavorite: boolean) => { 
     try { 
       const currentProject = projects.find(p => p.id === projectId);
       if (!currentProject) return;
@@ -90,12 +89,7 @@ const toggleFavorite = async (projectId: string, isFavorite: boolean) => {
         name: currentProject.name,
         isFavorite 
       }); 
-      setProjects((prev) => prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))); 
-      if (isFavorite) { 
-        setFavorites((prev) => [...prev, updatedProject]); 
-      } else { 
-        setFavorites((prev) => prev.filter((p) => p.id !== updatedProject.id)); 
-      } 
+      dispatch(updateProject(updatedProject));
       message.success("Favorite status updated."); 
     } catch (error) { 
       console.error(error);
@@ -133,7 +127,7 @@ const toggleFavorite = async (projectId: string, isFavorite: boolean) => {
           <List.Item onClick={() => setSelectedProject({ id: project.id, name: project.name })}>
             <Text># {project.name}</Text>
             <Dropdown overlay={menu(project.id, project.name, project.isFavorite)} trigger={["click"]}>
-              <MoreOutlined  />
+              <MoreOutlined />
             </Dropdown>
           </List.Item>
         )} />

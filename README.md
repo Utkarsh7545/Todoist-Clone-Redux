@@ -1,4 +1,4 @@
-# React Todoist Clone
+# React & Redux Todoist Clone
 
 A simplified Todoist clone built with React, TypeScript, and Ant Design, integrating with the official Todoist API.
 
@@ -14,6 +14,7 @@ A simplified Todoist clone built with React, TypeScript, and Ant Design, integra
 ## 🛠️ Technologies Used
 
 - React
+- Redux
 - TypeScript
 - Ant Design (UI Framework)
 - Todoist API
