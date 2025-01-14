@@ -91,7 +91,10 @@ const Todoist: React.FC<TodoistProps> = ({ projectId, projectName, allProjects }
         content: editingTask.content,
         description: editingTask.description,
       });
-      dispatch(updateTask({ ...editingTask, projectId }));
+      dispatch(updateTask({
+        ...editingTask, projectId,
+        isCompleted: false
+      }));
       setEditingTask(null);
     } catch (error) {
       console.error("Error updating task:", error);

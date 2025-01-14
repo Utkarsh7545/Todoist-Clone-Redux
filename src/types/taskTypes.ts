@@ -3,4 +3,5 @@ export interface Task {
     content: string;
     description: string;
     isCompleted: boolean;
+    projectId: string;
 }
